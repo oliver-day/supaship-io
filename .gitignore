@@ -27,3 +27,6 @@ dist-ssr
 /playwright/.cache/
 
 /dist
+
+# Environment variables
+.env*
