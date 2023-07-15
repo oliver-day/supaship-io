@@ -52,3 +52,26 @@ export async function signUp(
   const logoutButton = page.locator('button', { hasText: 'Logout' });
   await expect(logoutButton).toHaveCount(1);
 }
+
+export async function login(
+  page: Page,
+  email: string,
+  password: string,
+  username: string,
+  loginButtonSelector = 'button'
+) {
+  const signUpButton = page
+    .locator(loginButtonSelector, { hasText: 'Login' })
+    .first();
+  await signUpButton.click();
+  const emailInput = page.locator('input[name="email"]');
+  await emailInput.fill(email);
+  const passwordInput = page.locator('input[name="password"]');
+  await passwordInput.fill(password);
+  await page.keyboard.press('Enter');
+  const logoutButton = page.locator('button', { hasText: 'Logout' });
+  await expect(logoutButton).toHaveCount(1);
+
+  const usernameMention = page.locator('h2', { hasText: username });
+  await expect(usernameMention).toHaveCount(1);
+}
