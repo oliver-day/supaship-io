@@ -1,6 +1,7 @@
 import { test, expect } from '@playwright/test';
 import { login, setupE2eTest, signUp } from './utils';
 
+// User Auth
 test.describe('User Auth', () => {
   const userEmail = 'test@test.io';
   const userPassword = 'test123456';
@@ -67,4 +68,90 @@ test.describe('User Auth', () => {
     const welcomeNotice = page.locator('h2', { hasText: 'Welcome to Supaship!' });
     await expect(welcomeNotice).toHaveCount(0);
   });
-})
+
+  // Username Validation
+  test.describe('Username Validation', () => {
+    test.beforeEach(async ({ page }) => {
+      await page.goto('http://localhost:1337');
+      await signUp(page, userEmail, userPassword, userName, true);
+    });
+
+    test('it should not allow an empty username', async ({
+      page,
+    }) => {
+      const userNameInput = page.locator('input[name="username"]');
+      const submitButton = page.locator('button', { hasText: 'Submit' });
+      const validation = page.locator('p.validation-feedback');
+      await userNameInput.fill('');
+      await expect(submitButton).toBeDisabled();
+
+      await page.keyboard.press('Enter');
+      const welcomeHeader = page.locator('h2', { hasText: 'Welcome to Supaship!' });
+      await expect(welcomeHeader).toHaveCount(1);
+    });
+
+    test('it should not allow spaces in the username', async ({ page }) => {
+      const userNameInput = page.locator('input[name="username"]');
+      const submitButton = page.locator('button', { hasText: 'Submit' });
+      const validation = page.locator('p.validation-feedback');
+      await userNameInput.fill('test user');
+      expect(submitButton).toBeDisabled();
+
+      await page.keyboard.press('Enter');
+      const welcomeHeader = page.locator('h2', { hasText: 'Welcome to Supaship!' });
+      await expect(welcomeHeader).toHaveCount(1);
+      await expect(validation).toHaveText('Username can only contain letters, numbers, and underscores');
+    });
+
+    test('it should not allow usernames longer than 15 characters', async ({
+      page,
+      }) => {
+        const userNameInput = page.locator('input[name="username"]');
+        const submitButton = page.locator('button', { hasText: 'Submit' });
+        const validation = page.locator('p.validation-feedback');
+        await userNameInput.fill('testusernamethatiswaytoolong');
+        expect(submitButton).toBeDisabled();
+
+        await page.keyboard.press('Enter');
+        const welcomeHeader = page.locator('h2', { hasText: 'Welcome to Supaship!' });
+        await expect(welcomeHeader).toHaveCount(1);
+        await expect(validation).toHaveText('Username must be less than 15 characters long');
+      });
+
+      test('it should not allow usernames less than 3 characters', async ({
+        page,
+      }) => {
+        const userNameInput = page.locator('input[name="username"]');
+        const submitButton = page.locator('button', { hasText: 'Submit' });
+        const validation = page.locator('p.validation-feedback');
+        await userNameInput.fill('te');
+        expect(submitButton).toBeDisabled();
+
+        await page.keyboard.press('Enter');
+        const welcomeHeader = page.locator('h2', { hasText: 'Welcome to Supaship!' });
+        await expect(welcomeHeader).toHaveCount(1);
+        await expect(validation).toHaveText('Username must be at least 4 characters long');
+      });
+  });
+
+  test('it should not allow duplicate usernames', async ({
+    page,
+  }) => {
+    await signUp(page, userEmail, userPassword, userName);
+    const logoutButton = page.locator('button', { hasText: 'Logout' });
+    await logoutButton.click();
+    const signInButton = page.locator('button', { hasText: 'Login' });
+    await expect(signInButton).toHaveCount(2);
+
+    await signUp(page, `${userEmail}io`, userPassword, userName, true);
+    const userNameInput = page.locator('input[name="username"]');
+    const submitButton = page.locator('button', { hasText: 'Submit' });
+    const validation = page.locator('p.validation-feedback');
+    await userNameInput.fill(userName);
+    await expect(submitButton).toBeEnabled();
+    await page.keyboard.press('Enter');
+    const welcomeHeader = page.locator('h2', { hasText: 'Welcome to Supaship!' });
+    await expect(welcomeHeader).toHaveCount(1);
+    await expect(validation).toHaveText('Username "testuser" is already taken');
+  });
+});
