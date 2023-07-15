@@ -28,7 +28,7 @@ export async function signUp(
   email: string,
   password: string,
   username: string,
-  skipUserName: false
+  skipUserName = false
 ) {
   const signUpButton = page.locator('button', { hasText: 'Sign Up' }).first();
   await signUpButton.click();
