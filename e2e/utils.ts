@@ -75,3 +75,17 @@ export async function login(
   const usernameMention = page.locator('h2', { hasText: username });
   await expect(usernameMention).toHaveCount(1);
 }
+
+export async function createPost(page: Page, title: string, contents: string) {
+  await page.goto('http://localhost:1337/message-board/1');
+  const postTitleInput = page.locator('input[name="title"]');
+  const postContentsInput = page.locator('textarea[name="contents"]');
+  const postSubmitButton = page.locator('button[type="submit"]');
+  await postTitleInput.fill(title);
+  await postContentsInput.fill(contents);
+  await postSubmitButton.click();
+  const post = page.locator('h3', { hasText: title });
+  await expect(post).toHaveCount(1);
+
+  return post;
+}
