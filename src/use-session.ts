@@ -1,5 +1,6 @@
-import { RealtimeChannel, Session } from '@supabase/supabase-js';
 import { useEffect, useState } from 'react';
+import { useNavigate } from "react-router-dom";
+import { RealtimeChannel, Session } from '@supabase/supabase-js';
 import { supaClient } from './supa-client';
 
 export interface UserProfile {
@@ -18,25 +19,27 @@ export function useSession(): SupashipUserInfo {
     session: null,
   });
   const [channel, setChannel] = useState<RealtimeChannel | null>(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
-    supaClient.auth.getSession().then(({ data: { session } }) => {
-      setUserInfo({ ...userInfo, session });
-      supaClient.auth.onAuthStateChange((_event, session) => {
-        setUserInfo({ session, profile: null });
+    supaClient.auth.getSession()
+      .then(({ data: { session } }) => {
+        setUserInfo({ ...userInfo, session });
+        supaClient.auth.onAuthStateChange((_event, session) => {
+          setUserInfo({ session, profile: null });
+        });
       });
-    });
   }, []);
 
   useEffect(() => {
     if (userInfo.session?.user && !userInfo.profile) {
       listenToUserProfileChanges(userInfo.session.user.id)
-      .then((newChannel) => {
-        if (channel) {
-          channel.unsubscribe();
-        }
-        setChannel(newChannel);
-      });
+        .then((newChannel) => {
+          if (channel) {
+            channel.unsubscribe();
+          }
+          setChannel(newChannel);
+        });
     } else if (!userInfo.session?.user) {
       channel?.unsubscribe();
       setChannel(null);
@@ -50,7 +53,9 @@ export function useSession(): SupashipUserInfo {
       .select("*")
       .filter("user_id", "eq", userId);
 
-      if (data?.[0]) {
+      if (!data?.length) {
+        navigate("/welcome");
+      } else {
         setUserInfo({ ...userInfo, profile: data?.[0] });
       }
 
@@ -65,7 +70,10 @@ export function useSession(): SupashipUserInfo {
             filter: `user_id.eq.${userId}`,
           },
           (payload) => {
-            setUserInfo({ ...userInfo, profile: payload.new as UserProfile });
+            setUserInfo({
+              ...userInfo,
+              profile: payload.new as UserProfile
+            });
           }
         )
         .subscribe();
