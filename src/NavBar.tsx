@@ -1,6 +1,12 @@
+import { useContext } from "react";
 import { Link } from "react-router-dom";
+import { UserContext } from "./App";
+import Login from "./Login";
+import UserMenu from "./UserMenu";
 
 export default function NavBar() {
+  const { session } = useContext(UserContext);
+
   return (
     <>
       <nav className="nav-bar">
@@ -18,6 +24,9 @@ export default function NavBar() {
             <Link to="/1" className="nav-message-board-link">
               message board
             </Link>
+          </li>
+          <li className="nav-auth-item">
+            {session?.user ? <UserMenu /> : <Login />}
           </li>
         </ul>
       </nav>
