@@ -8,14 +8,17 @@ export async function welcomeLoader() {
   const {
     data: { user },
   } = await supaClient.auth.getUser();
+
   if (!user) {
     return redirect("/");
   }
+
   const { data } = await supaClient
     .from("user_profiles")
     .select("*")
     .eq("user_id", user?.id)
     .single();
+
   if (data?.username) {
     return redirect("/");
   }
@@ -106,15 +109,19 @@ function validateUsername(username: string): string | undefined {
   if (!username) {
     return "Username is required";
   }
+
   const regex = /^[a-zA-Z0-9_]+$/;
   if (username.length < 4) {
     return "Username must be at least 4 characters long";
   }
+
   if (username.length > 14) {
     return "Username must be less than 15 characters long";
   }
+
   if (!regex.test(username)) {
     return "Username can only contain letters, numbers, and underscores";
   }
+
   return undefined;
 }
