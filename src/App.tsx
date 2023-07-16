@@ -5,7 +5,7 @@ import AllPosts from "./AllPosts";
 import PostView from "./PostView";
 import MessageBoard from "./MessageBoard";
 import NavBar from "./NavBar";
-import { Welcome } from "./Welcome";
+import { Welcome, welcomeLoader } from "./Welcome";
 import './App.css';
 
 const router = createBrowserRouter([
@@ -30,6 +30,7 @@ const router = createBrowserRouter([
       {
         path: "welcome",
         element: <Welcome />,
+        loader: welcomeLoader,
       },
     ],
   }
