@@ -1,5 +1,6 @@
 import { useContext, useState } from "react";
-import { Auth, ThemeSupa } from "@supabase/auth-ui-react";
+import { Auth } from "@supabase/auth-ui-react";
+import { ThemeSupa } from "@supabase/auth-ui-shared";
 
 import { UserContext } from "./App";
 import { supaClient } from "./supa-client";
