@@ -106,4 +106,59 @@ test.describe('Message Board', () => {
     expect(page.url()).toBe(postUrl);
     await expect(postContent).toHaveCount(1);
   });
+
+  test.describe("user signed in", () => {
+    test.beforeEach(async ({ page }) => {
+      await signUp(page, testUserEmail, testUserPassword, testUserName);
+    });
+
+    test("can get to message board", async ({ page }) => {
+      const messageBoardLink = page.locator("a", { hasText: "Message Board" });
+      await messageBoardLink.click();
+      const messageBoardHeader = page.locator("h2", {
+        hasText: "Message Board",
+      });
+      await expect(messageBoardHeader).toHaveCount(1);
+    });
+
+    test("can create a new post", async ({ page }) => {
+      await createPost(page, "Test Post", "This is a test post");
+      const postedByMessage = page.locator("p", {
+        hasText: `Posted by ${testUserName}`,
+      });
+      await expect(postedByMessage).toHaveCount(1);
+    });
+
+    test("can create a new top level comment", async ({ page }) => {
+      const post = await createPost(page, "Test Post", "This is a test post");
+      await post.click();
+      await createComment(page, "This is a test comment");
+      const textArea = page.locator(`textarea`);
+      await expect(textArea).toHaveValue("");
+    });
+
+    test("nested comment form closes after comment is posted", async ({
+      page,
+    }) => {
+      const post = await createPost(page, "Test Post", "This is a test post");
+      await post.click();
+      await createComment(page, "This is a test comment");
+      const replyButton = page.locator(`button`, { hasText: "Reply" });
+      await replyButton.click();
+      const commentForms = page.locator(`[data-e2e="create-comment-form"]`);
+      await expect(commentForms).toHaveCount(2);
+
+      const nestedCommentForm = commentForms.nth(1);
+      await nestedCommentForm
+        .locator("textarea")
+        .fill("This is a nested comment");
+      await page.keyboard.press("Tab");
+      await page.keyboard.press("Space");
+      const postedComment = page.locator(`[data-e2e="comment-content"]`, {
+        hasText: "This is a nested comment",
+      });
+      await expect(postedComment).toHaveCount(1);
+      await expect(commentForms).toHaveCount(1);
+    });
+  });
 });
