@@ -1,15 +1,73 @@
-import { useContext } from "react";
+import { useContext, useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { UserContext } from "./App";
 import { GetPostsResponse } from "./database.types";
+import { supaClient } from "./supa-client";
 import { usePostScore } from "./use-post-score";
 import { castVote } from "./cast-vote";
+import { CreatePost } from "./CreatePost";
 import { UpVote } from "./UpVote";
 import { timeAgo } from "./time-ago";
 
-export default function AllPosts() {
+export function AllPosts() {
+  const { session } = useContext(UserContext);
   const { pageNumber } = useParams();
-  return <h2>All Posts; page: {pageNumber}</h2>;
+  const [bumper, setBumper] = useState(0);
+  const [posts, setPosts] = useState<GetPostsResponse[]>([]);
+  const [myVotes, setMyVotes] = useState<
+    Record<string, "up" | "down" | undefined>
+  >({});
+
+  useEffect(() => {
+    const queryPageNumber = pageNumber ? +pageNumber : 1;
+
+    supaClient
+      .rpc("get_posts", { page_number: queryPageNumber })
+      .select("*")
+      .then(({ data }) => {
+        setPosts(data as GetPostsResponse[]);
+        if (session?.user) {
+          supaClient
+            .from("post_votes")
+            .select("*")
+            .eq("user_id", session.user.id)
+            .then(({ data: votesData }) => {
+              if (!votesData) {
+                return;
+              }
+              const votes = votesData.reduce((acc, vote) => {
+                acc[vote.post_id] = vote.vote_type as any;
+                return acc;
+              }, {} as Record<string, "up" | "down" | undefined>);
+              setMyVotes(votes);
+            });
+        }
+      });
+  }, [session, bumper, pageNumber]);
+
+  return (
+    <>
+      {session && (
+        <CreatePost
+          newPostCreated={() => {
+            setBumper(bumper + 1);
+          }}
+        />
+      )}
+      <div className="posts-container">
+        {posts?.map((post, i) => (
+          <Post
+            key={post.id}
+            postData={post}
+            myVote={myVotes?.[post.id] || undefined}
+            onVoteSuccess={() => {
+              setBumper(bumper + 1);
+            }}
+          />
+        ))}
+      </div>
+    </>
+  );
 }
 
 function Post({
