@@ -1,7 +1,7 @@
 import { createContext } from "react";
 import { createBrowserRouter, Outlet, RouterProvider } from "react-router-dom";
 import { SupashipUserInfo, useSession } from "./use-session";
-import AllPosts from "./AllPosts";
+import { AllPosts } from "./AllPosts";
 import PostView from "./PostView";
 import MessageBoard from "./MessageBoard";
 import NavBar from "./NavBar";
